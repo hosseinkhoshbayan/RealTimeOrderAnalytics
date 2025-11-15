@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # صف پیام RabbitMQ
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"   # پورت AMQP
+      - "15672:15672" # پورت Management UI
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # سرویس Order API (C#)
+  order-api:
+    build:
+      context: ./OrderApi
+      dockerfile: Dockerfile
+    container_name: order-api
+    ports:
+      - "8080:8080"
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure
+
+  # سرویس Analytics Processor (Node.js)
+  analytics-processor:
+    build:
+      context: ./AnalyticsProcessor
+      dockerfile: Dockerfile
+    container_name: analytics-processor
+    environment:
+      - RABBITMQ_HOST=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    restart: on-failure

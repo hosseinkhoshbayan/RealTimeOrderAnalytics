@@ -1,0 +1,12 @@
+{
+  "name": "analytics-processor",
+  "version": "1.0.0",
+  "description": "Real-Time Order Analytics Processor",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "amqplib": "^0.10.3"
+  }
+}
