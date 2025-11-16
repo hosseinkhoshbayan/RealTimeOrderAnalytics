@@ -5,15 +5,15 @@ A distributed microservices system for real-time order processing and analytics
 ## 📋 System Architecture
 
 ```
-┌─────────────┐      ┌──────────────┐      ┌─────────────────────┐
-│  Order API  │─────▶│   RabbitMQ   │─────▶│ Analytics Processor │
-│   (C#/.NET) │      │    (Queue)   │      │      (Node.js)      │
-└─────────────┘      └──────────────┘      └─────────────────────┘
+┌─────────────┐      ┌──────────────┐      ┌─────────────────────┐      ┌──────────┐
+│  Order API  │─────▶│   RabbitMQ   │─────▶│ Analytics Processor │─────▶│ MongoDB  │
+│   (C#/.NET) │      │    (Queue)   │      │   (Node.js + API)   │      │ Database │
+└─────────────┘      └──────────────┘      └─────────────────────┘      └──────────┘
 ```
 
 ## 🛠️ Tech Stack
 
-- **Order API**: .NET 10 (C#)
+- **Order API**: ASP.NET Core 8.0 (C#)
 - **Analytics Processor**: Node.js 20
 - **Message Broker**: RabbitMQ
 - **Containerization**: Docker & Docker Compose
@@ -37,7 +37,7 @@ A distributed microservices system for real-time order processing and analytics
 
 1. **Clone the repository:**
 ```bash
-git clone https://github.com/hosseinkhoshbayan/RealTimeOrderAnalytics.git
+git clone https://github.com/YOUR_USERNAME/RealTimeOrderAnalytics.git
 cd RealTimeOrderAnalytics
 ```
 
