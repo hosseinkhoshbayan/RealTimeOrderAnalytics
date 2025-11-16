@@ -6,10 +6,129 @@
 
 ---
 
+# 📚 API Documentation
+
+## Base URLs
+- **Order API**: `http://localhost:8080`
+- **Analytics API**: `http://localhost:3000`
+- **Swagger UI (Order API)**: `http://localhost:8080/swagger`
+
+---
+
 ## 📦 Order API Endpoints
 
-### 1. Create Order
+### 1. Get API Info
+Get basic information about the Order API service.
+
+**Endpoint**: `GET /`
+
+**Response**: `200 OK`
+```json
+{
+  "service": "Order API",
+  "version": "1.0.0",
+  "status": "running",
+  "endpoints": [
+    "GET /health - Health check",
+    "POST /api/orders - Create new order",
+    "GET /api/orders/stats - Get order statistics"
+  ]
+}
+```
+
+**Example**:
+```bash
+curl http://localhost:8080/
+```
+
+---
+
+### 2. Health Check
+Check if the Order API service and RabbitMQ connection are healthy.
+
+**Endpoint**: `GET /health`
+
+**Response**: `200 OK`
+```json
+{
+  "status": "healthy",
+  "rabbitMqConnected": true,
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+**Example**:
+```bash
+curl http://localhost:8080/health
+```
+
+---
+
+### 3. Create Order (RESTful)
 Creates a new order and sends it to the message queue.
+
+**Endpoint**: `POST /api/orders`
+
+**Request Body**:
+```json
+{
+  "OrderId": "ORD-001",
+  "ProductId": "PROD-123",
+  "Quantity": 5
+}
+```
+
+**Validation Rules**:
+- `OrderId`: Required, non-empty string
+- `ProductId`: Required, non-empty string
+- `Quantity`: Must be between 1 and 1000
+
+**Response**: `202 Accepted`
+```json
+{
+  "success": true,
+  "message": "Order accepted and queued for processing",
+  "data": {
+    "orderId": "ORD-001",
+    "productId": "PROD-123",
+    "quantity": 5
+  }
+}
+```
+
+**Response**: `400 Bad Request` (Validation Error)
+```json
+{
+  "success": false,
+  "message": "Quantity must be greater than 0"
+}
+```
+
+**Examples**:
+```bash
+# Valid order
+curl -X POST http://localhost:8080/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "OrderId": "ORD-001",
+    "ProductId": "PROD-123",
+    "Quantity": 5
+  }'
+
+# Invalid order (quantity = 0)
+curl -X POST http://localhost:8080/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "OrderId": "ORD-002",
+    "ProductId": "PROD-456",
+    "Quantity": 0
+  }'
+```
+
+---
+
+### 4. Create Order (Legacy)
+Alternative endpoint for backward compatibility.
 
 **Endpoint**: `POST /order`
 
@@ -40,6 +159,28 @@ curl -X POST http://localhost:8080/order \
     "ProductId": "PROD-123",
     "Quantity": 5
   }'
+```
+
+---
+
+### 5. Get Order Statistics
+Get mock statistics about order processing (demonstration endpoint).
+
+**Endpoint**: `GET /api/orders/stats`
+
+**Response**: `200 OK`
+```json
+{
+  "ordersProcessed": 542,
+  "lastHour": 37,
+  "averageQuantity": 6,
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+**Example**:
+```bash
+curl http://localhost:8080/api/orders/stats
 ```
 
 ---
