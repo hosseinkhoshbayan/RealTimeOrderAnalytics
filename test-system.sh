@@ -48,19 +48,36 @@ test_endpoint() {
 
 echo "Step 1: Health Checks"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-test_endpoint "Order API Health" "http://localhost:8080/"
+test_endpoint "Order API Info" "http://localhost:8080/"
+test_endpoint "Order API Health" "http://localhost:8080/health"
 test_endpoint "Analytics API Health" "http://localhost:3000/health"
 echo ""
 
-echo "Step 2: Create Orders"
+echo "Step 2: Test Validation (Should Fail)"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-test_endpoint "Create Order 1" "http://localhost:8080/order" "POST" \
+echo -n "Testing: Invalid Order (quantity=0)... "
+response=$(curl -s -w "\n%{http_code}" -X POST "http://localhost:8080/api/orders" \
+    -H "Content-Type: application/json" \
+    -d '{"OrderId": "ORD-INVALID", "ProductId": "PROD-000", "Quantity": 0}')
+http_code=$(echo "$response" | tail -n1)
+if [ "$http_code" = "400" ]; then
+    echo -e "${GREEN}✓ PASSED${NC} (Validation worked - HTTP 400)"
+    ((TESTS_PASSED++))
+else
+    echo -e "${RED}✗ FAILED${NC} (Expected 400, got HTTP $http_code)"
+    ((TESTS_FAILED++))
+fi
+echo ""
+
+echo "Step 3: Create Valid Orders"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+test_endpoint "Create Order 1" "http://localhost:8080/api/orders" "POST" \
     '{"OrderId": "ORD-TEST-001", "ProductId": "PROD-123", "Quantity": 5}'
 
-test_endpoint "Create Order 2" "http://localhost:8080/order" "POST" \
+test_endpoint "Create Order 2" "http://localhost:8080/api/orders" "POST" \
     '{"OrderId": "ORD-TEST-002", "ProductId": "PROD-456", "Quantity": 3}'
 
-test_endpoint "Create Order 3" "http://localhost:8080/order" "POST" \
+test_endpoint "Create Order 3" "http://localhost:8080/api/orders" "POST" \
     '{"OrderId": "ORD-TEST-003", "ProductId": "PROD-789", "Quantity": 10}'
 
 echo ""

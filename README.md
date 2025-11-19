@@ -14,14 +14,19 @@ A distributed microservices system for real-time order processing and analytics
 ## 🛠️ Tech Stack
 
 - **Order API**: .NET 10 (C#)
-- **Analytics Processor**: Node.js 20
+- **Analytics Processor**: Node.js 20 + Express
 - **Message Broker**: RabbitMQ
+- **Database**: MongoDB
 - **Containerization**: Docker & Docker Compose
 
 ## 🎯 Features
 
 - ✅ Microservices Architecture
+- ✅ RESTful APIs with Swagger Documentation
+- ✅ Input Validation & Error Handling
 - ✅ Asynchronous Communication via RabbitMQ
+- ✅ Persistent Data Storage with MongoDB
+- ✅ Health Checks for all services
 - ✅ Fully Containerized with Docker
 - ✅ Real-Time Processing
 - ✅ Scalable & Decoupled Design
@@ -50,13 +55,27 @@ Wait for all services to start (approximately 30 seconds)
 
 3. **Test the system:**
 ```bash
-curl -X POST http://localhost:8080/order \
+# Create an order (RESTful endpoint)
+curl -X POST http://localhost:8080/api/orders \
   -H "Content-Type: application/json" \
   -d '{
     "OrderId": "ORD-001",
     "ProductId": "PROD-123",
     "Quantity": 5
   }'
+
+# View Order API stats
+curl http://localhost:8080/api/orders/stats
+
+# View all orders in Analytics
+curl http://localhost:3000/api/orders
+
+# View analytics statistics
+curl http://localhost:3000/api/stats
+
+# OR use the automated test script
+chmod +x test-system.sh
+./test-system.sh
 ```
 
 You should see the order being processed in the Analytics Processor logs!
@@ -64,23 +83,49 @@ You should see the order being processed in the Analytics Processor logs!
 ## 📊 Monitoring & Management
 
 - **Order API**: http://localhost:8080
+- **Order API Swagger**: http://localhost:8080/swagger
+- **Order API Health**: http://localhost:8080/health
+- **Analytics API**: http://localhost:3000/api/orders
+- **Analytics Health**: http://localhost:3000/health
 - **RabbitMQ Management UI**: http://localhost:15672
   - Username: `guest`
   - Password: `guest`
+- **MongoDB**: mongodb://localhost:27017
 
 ## 📂 Project Structure
 
 ```
 RealTimeOrderAnalytics/
 ├── docker-compose.yml
-├── OrderApi/
+├── test-system.sh
+├── API_DOCUMENTATION.md
+├── DEVELOPMENT_GUIDE.md
+├── CHANGELOG.md
+├── .gitignore
+├── README.md
+├── OrderApi/                        # C# Microservice
+│   ├── Models/
+│   │   └── Order.cs                 # Data models & DTOs
+│   ├── Services/
+│   │   ├── IMessagePublisher.cs     # Publisher interface
+│   │   ├── RabbitMqPublisher.cs     # RabbitMQ implementation
+│   │   ├── OrderService.cs          # Order business logic
+│   │   └── HealthCheckService.cs    # Health monitoring
+│   ├── Validators/
+│   │   └── OrderValidator.cs        # Business rules validation
 │   ├── Program.cs
+│   ├── appsettings.json
 │   ├── OrderApi.csproj
-│   └── Dockerfile
-└── AnalyticsProcessor/
+│   ├── Dockerfile
+│   └── README.md
+├── OrderApi.Tests/                  # Unit Tests
+│   ├── OrderValidatorTests.cs
+│   └── OrderApi.Tests.csproj
+└── AnalyticsProcessor/              # Node.js Microservice
     ├── index.js
     ├── package.json
-    └── Dockerfile
+    ├── Dockerfile
+    └── README.md
 ```
 
 ## 🔧 Development
@@ -108,30 +153,60 @@ docker run -d --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 
 ## 🧪 Testing
 
-### Send Multiple Orders
+### Automated Testing
 ```bash
-# Order 1
-curl -X POST http://localhost:8080/order \
+chmod +x test-system.sh
+./test-system.sh
+```
+
+### Manual Testing
+
+**Create Orders:**
+```bash
+# Valid order
+curl -X POST http://localhost:8080/api/orders \
   -H "Content-Type: application/json" \
   -d '{"OrderId": "ORD-001", "ProductId": "PROD-123", "Quantity": 5}'
 
-# Order 2
-curl -X POST http://localhost:8080/order \
+# Invalid order (will return 400)
+curl -X POST http://localhost:8080/api/orders \
   -H "Content-Type: application/json" \
-  -d '{"OrderId": "ORD-002", "ProductId": "PROD-456", "Quantity": 3}'
+  -d '{"OrderId": "ORD-002", "ProductId": "PROD-456", "Quantity": 0}'
 ```
 
-### View Logs
+**Check Health:**
 ```bash
-# Order API logs
-docker logs order-api
-
-# Analytics Processor logs (real-time)
-docker logs analytics-processor -f
-
-# RabbitMQ logs
-docker logs rabbitmq
+curl http://localhost:8080/health
+curl http://localhost:3000/health
 ```
+
+**View All Orders:**
+```bash
+curl http://localhost:3000/api/orders
+```
+
+**Get Specific Order:**
+```bash
+curl http://localhost:3000/api/orders/ORD-001
+```
+
+**View Statistics:**
+```bash
+# Order API stats
+curl http://localhost:8080/api/orders/stats
+
+# Analytics stats
+curl http://localhost:3000/api/stats
+```
+
+**Access MongoDB Directly:**
+```bash
+docker exec -it mongodb mongosh
+use analytics
+db.orders.find().pretty()
+```
+
+See [API_DOCUMENTATION.md](API_DOCUMENTATION.md) for complete API reference.
 
 ## 🏗️ Architecture Decisions
 
@@ -155,11 +230,13 @@ docker logs rabbitmq
 
 ## 🔄 How It Works
 
-1. **Client** sends a POST request to Order API with order details
-2. **Order API** validates and publishes the order to RabbitMQ queue
-3. **RabbitMQ** stores the message reliably
+1. **Client** sends a POST request to Order API (`POST /order`) with order details
+2. **Order API** validates the order and publishes it to RabbitMQ queue (`order_placed`)
+3. **RabbitMQ** stores the message reliably in the queue
 4. **Analytics Processor** consumes the message from the queue
-5. **Analytics Processor** processes and logs the order data
+5. **Analytics Processor** saves the order to MongoDB database
+6. **Analytics Processor** provides REST API to query orders and statistics
+7. **Client** can retrieve orders via Analytics API (`GET /api/orders`)
 
 ## 🚀 Scaling
 
