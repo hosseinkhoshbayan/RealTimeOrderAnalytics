@@ -13,7 +13,7 @@ A distributed microservices system for real-time order processing and analytics
 
 ## 🛠️ Tech Stack
 
-- **Order API**: ASP.NET Core 8.0 (C#)
+- **Order API**: .NET 10 (C#)
 - **Analytics Processor**: Node.js 20
 - **Message Broker**: RabbitMQ
 - **Containerization**: Docker & Docker Compose
